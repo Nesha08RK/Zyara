@@ -14,8 +14,8 @@ Zyara/
 │   │   ├── js/            # JavaScript files
 │   │   └── images/        # Image assets
 │   ├── templates/         # HTML Templates
-│   │   ├── base.html
-│   │   ├── rooms.html
-│   │   ├── food_menu.html
-│   │   ├── booking.html
-│   │   └── login.html
+│   │   ├── Home.html
+│   │   ├── Rooms.html
+│   │   ├── Dining.html
+│   │   ├── Services.html
+│   │   └── Navbar.html
