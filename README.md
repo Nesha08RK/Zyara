@@ -7,8 +7,8 @@
 ## 📁 Project Structure
 
 ```text
-hotel-management/
-├── app/
+Zyara/
+├── Zyara/
 │   ├── static/
 │   │   ├── css/           # Stylesheets
 │   │   ├── js/            # JavaScript files
