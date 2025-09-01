@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hotel Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Teal/Emerald Professional Theme (like reference) */
+    :root {
+      --bg-deep: #0b1f1e;
+      --bg-soft: #0f2928;
+      --card: #ffffff;
+      --ink: #0b1720;
+      --muted: #5a6b74;
+      --primary: #10b981; /* emerald */
+      --primary-600: #059669;
+      --primary-50: #ecfdf5;
+      --stroke: #e6eef0;
+      --nav-pill: rgba(16,185,129,0.12);
+      --nav-pill-b: rgba(16,185,129,0.25);
+      --shadow: 0 20px 45px rgba(15, 88, 80, 0.12);
+    }
+
+    body { font-family: 'Inter', sans-serif; background: radial-gradient(1200px 600px at 10% -10%, #0e4240 0%, var(--bg-deep) 55%), linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-soft) 100%); color: var(--ink); }
+    header { background: linear-gradient(120deg, rgba(16,185,129,.15) 0%, rgba(16,185,129,.05) 100%); border-color: transparent !important; backdrop-filter: blur(6px); }
+    .brand { background: var(--primary) !important; }
+    .title { color: #f8fafc; }
+    .nav-btn { border: 1px solid transparent; color: #e6fffb; background: transparent; border-radius: 9999px; }
+    .tab-active { background: var(--nav-pill); color: #eafff7; border-color: var(--nav-pill-b); box-shadow: inset 0 0 0 1px var(--nav-pill-b); }
+
+    .card { background: var(--card); border: 1px solid var(--stroke); border-radius: 14px; box-shadow: var(--shadow); }
+    .btn { padding: 0.6rem 0.9rem; border-radius: 10px; background: var(--primary); color: white; font-weight: 600; transition: transform .06s ease, filter .2s; border: 1px solid var(--primary-600); box-shadow: 0 8px 18px rgba(16,185,129,.25); }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: translateY(1px); }
+    .btn-secondary { background: white; color: var(--ink); border: 1px solid var(--stroke); padding: 0.5rem 0.75rem; border-radius: 10px; }
+
+    .input { background: #ffffff; color: var(--ink); border: 1px solid var(--stroke); border-radius: 10px; padding: 0.55rem 0.75rem; width: 100%; }
+    .input::placeholder { color: #9aa7ad; }
+    .input:focus { outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,.15); border-color: var(--primary-600); }
+
+    .chip-available { background: #eafff7; color: #0d7a57; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; }
+    .chip-maint { background: #fff7e6; color: #a16207; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; }
+
+    .table th { color: #6b7280; font-weight: 600; }
+    .table td { color: #111827; }
+    .toast { position: fixed; right: 1rem; bottom: 1rem; background: #0e2f2c; border: 1px solid rgba(16,185,129,.35); color: #eafff7; padding: .75rem 1rem; border-radius: .75rem; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .hidden { display: none; }
+  </style>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: '#4f46e5' } } } }
+  </script>
+</head>
+<body class="min-h-screen">
+  <header class="border-b sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-18 h-9 rounded-md brand text-white grid place-items-center font-semibold">Zyara</div>
+        <!--<h1 class="text-xl font-semibold title">Zyara</h1>-->
+      </div>
+      <nav class="flex gap-2" id="tabs">
+        <button data-tab="rooms" class="px-3 py-2 rounded-md text-sm nav-btn">Rooms</button>
+        <button data-tab="available" class="px-3 py-2 rounded-md text-sm nav-btn">Available</button>
+        <button data-tab="bookings" class="px-3 py-2 rounded-md text-sm nav-btn">Bookings</button>
+        <button data-tab="staff" class="px-3 py-2 rounded-md text-sm nav-btn">Staff</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Rooms -->
+    <section id="panel-rooms" class="hidden">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-1 card bg-white rounded-xl p-5">
+          <h2 class="text-lg font-semibold mb-3">Add Room</h2>
+          <form id="form-room" class="space-y-3">
+            <input class="input" name="number" placeholder="Room Number" required />
+            <input class="input" name="type" placeholder="Type (Deluxe, Suite)" required />
+            <input class="input" name="capacity" type="number" placeholder="Capacity" required />
+            <input class="input" name="price_per_night" type="number" step="0.01" placeholder="Price per Night" required />
+            <select class="input" name="status">
+              <option value="available">available</option>
+              <option value="maintenance">maintenance</option>
+            </select>
+            <button class="btn w-full" type="submit">Save</button>
+          </form>
+        </div>
+        <div class="md:col-span-2 card rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold">Rooms</h2>
+          </div>
+          <div class="mb-3 flex gap-2 items-center">
+            <input id="rooms-q" class="input" placeholder="Search rooms by number or type" />
+            <select id="rooms-status" class="input" style="max-width: 10rem;">
+              <option value="">All status</option>
+              <option value="available">Available</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+            <div class="flex-1"></div>
+            <button id="refresh-rooms" class="btn btn-secondary">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm table" id="table-rooms">
+              <thead class="text-left">
+                <tr>
+                  <th class="p-2">#</th>
+                  <th class="p-2">Type</th>
+                  <th class="p-2">Capacity</th>
+                  <th class="p-2">Price</th>
+                  <th class="p-2">Status</th>
+                  <th class="p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="flex items-center gap-2 mt-3 justify-end">
+            <button id="rooms-prev" class="btn btn-secondary">Prev</button>
+            <span id="rooms-page" class="text-sm" style="color:#9fb0d0;"></span>
+            <button id="rooms-next" class="btn btn-secondary">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Available Rooms -->
+    <section id="panel-available" class="hidden">
+      <div class="card rounded-xl p-5 space-y-4">
+        <h2 class="text-lg font-semibold">Search Available Rooms</h2>
+        <form id="form-available" class="grid md:grid-cols-4 gap-3">
+          <input class="input" name="check_in" type="date" required />
+          <input class="input" name="check_out" type="date" required />
+          <input class="input" name="type" placeholder="Type (optional)" />
+          <button class="btn" type="submit">Search</button>
+        </form>
+        <div id="available-results" class="grid md:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- Bookings -->
+    <section id="panel-bookings" class="hidden">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-1 card bg-white rounded-xl p-5">
+          <h2 class="text-lg font-semibold mb-3">Create Booking</h2>
+          <form id="form-booking" class="space-y-3">
+            <input class="input" name="guest_name" placeholder="Guest Name" required />
+            <input class="input" name="guest_phone" placeholder="Guest Phone" />
+            <input class="input" name="room_id" type="number" placeholder="Room ID" required />
+            <input class="input" name="check_in" type="date" required />
+            <input class="input" name="check_out" type="date" required />
+            <button class="btn w-full" type="submit">Book</button>
+          </form>
+        </div>
+        <div class="md:col-span-2 card rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold">Bookings</h2>
+          </div>
+          <div class="mb-3 flex gap-2 items-center">
+            <input id="bookings-q" class="input" placeholder="Search bookings by guest or phone" />
+            <div class="flex-1"></div>
+            <button id="refresh-bookings" class="btn btn-secondary">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm table" id="table-bookings">
+              <thead class="text-left">
+                <tr>
+                  <th class="p-2">#</th>
+                  <th class="p-2">Guest</th>
+                  <th class="p-2">Room</th>
+                  <th class="p-2">Check-in</th>
+                  <th class="p-2">Check-out</th>
+                  <th class="p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="flex items-center gap-2 mt-3 justify-end">
+            <button id="bookings-prev" class="btn btn-secondary">Prev</button>
+            <span id="bookings-page" class="text-sm" style="color:#9fb0d0;"></span>
+            <button id="bookings-next" class="btn btn-secondary">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Staff -->
+    <section id="panel-staff" class="hidden">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-1 card bg-white rounded-xl p-5">
+          <h2 class="text-lg font-semibold mb-3">Add Staff</h2>
+          <form id="form-staff" class="space-y-3">
+            <input class="input" name="name" placeholder="Name" required />
+            <input class="input" name="role" placeholder="Role" required />
+            <input class="input" name="phone" placeholder="Phone" />
+            <input class="input" name="email" type="email" placeholder="Email" />
+            <button class="btn w-full" type="submit">Save</button>
+          </form>
+        </div>
+        <div class="md:col-span-2 card rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold">Staff</h2>
+          </div>
+          <div class="mb-3 flex gap-2 items-center">
+            <input id="staff-q" class="input" placeholder="Search staff by name, role, email" />
+            <div class="flex-1"></div>
+            <button id="refresh-staff" class="btn btn-secondary">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm table" id="table-staff">
+              <thead class="text-left">
+                <tr>
+                  <th class="p-2">#</th>
+                  <th class="p-2">Name</th>
+                  <th class="p-2">Role</th>
+                  <th class="p-2">Phone</th>
+                  <th class="p-2">Email</th>
+                  <th class="p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="flex items-center gap-2 mt-3 justify-end">
+            <button id="staff-prev" class="btn btn-secondary">Prev</button>
+            <span id="staff-page" class="text-sm" style="color:#9fb0d0;"></span>
+            <button id="staff-next" class="btn btn-secondary">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="toast" class="toast hidden"></div>
+  <!-- Unlock overlay for receptionist keyword -->
+  <div id="unlock-overlay" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(11,31,30,.85), rgba(11,31,30,.92));backdrop-filter:blur(6px);z-index:50;">
+    <div style="width:100%;max-width:420px" class="card p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 rounded-lg brand text-white grid place-items-center font-semibold">HM</div>
+        <div>
+          <div class="text-lg font-semibold">Enter access keyword</div>
+          <div class="text-sm" style="color:#6b7280">Press Ctrl+Shift+Z to show this dialog</div>
+        </div>
+      </div>
+      <form id="unlock-form" class="space-y-3">
+        <input class="input" name="keyword" type="password" placeholder="Keyword" autofocus />
+        <button class="btn w-full" type="submit">Unlock</button>
+      </form>
+    </div>
+  </div>
+
+  
+
+  <script>
+    const tabs = document.getElementById('tabs').querySelectorAll('button');
+    const panels = ['rooms','available','bookings','staff'].map(id => document.getElementById('panel-' + id));
+    function activate(tab) {
+      tabs.forEach(b => b.classList.remove('tab-active'));
+      panels.forEach(p => p.classList.add('hidden'));
+      document.querySelector('[data-tab="' + tab + '"]').classList.add('tab-active');
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+    }
+    tabs.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
+    activate('rooms');
+
+    // Helpers
+    const api = (path, opts) => fetch(path, opts).then(r => r.ok ? r.json() : r.json().then(e=>Promise.reject(e)));
+    const formToJSON = (form) => Object.fromEntries(new FormData(form).entries());
+    function showToast(message) {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.add('hidden'), 1800);
+    }
+
+    // Receptionist unlock
+    const ACCESS_KEYWORD = 'zyara';
+    const overlay = document.getElementById('unlock-overlay');
+    document.getElementById('unlock-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const { keyword } = formToJSON(e.target);
+      if ((keyword || '').toLowerCase().trim() === ACCESS_KEYWORD) {
+        overlay.style.display = 'none';
+        showToast('Unlocked');
+      } else {
+        showToast('Invalid keyword');
+      }
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z') {
+        overlay.style.display = 'flex';
+        const input = document.querySelector('#unlock-form input[name="keyword"]');
+        setTimeout(() => input && input.focus(), 50);
+      }
+    });
+
+    // Rooms
+    const roomsState = { page: 1, limit: 10, q: '', status: '' };
+    async function loadRooms() {
+      const qs = new URLSearchParams({ page: roomsState.page, limit: roomsState.limit, q: roomsState.q, status: roomsState.status }).toString();
+      const { total, rows } = await api('/api/rooms?' + qs);
+      const tbody = document.querySelector('#table-rooms tbody');
+      tbody.innerHTML = '';
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${r.number}</td>
+          <td class="p-2">${r.type}</td>
+          <td class="p-2">${r.capacity}</td>
+          <td class="p-2">$${r.price_per_night}</td>
+          <td class="p-2"><span class="px-2 py-1 rounded text-xs ${r.status==='available'?'chip-available':'chip-maint'}">${r.status}</span></td>
+          <td class="p-2"><button class="text-red-400" data-del-room="${r.id}">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('[data-del-room]').forEach(btn => btn.addEventListener('click', async () => {
+        await api('/api/rooms/' + btn.dataset.delRoom, { method: 'DELETE' });
+        loadRooms();
+        showToast('Room deleted');
+      }));
+      const pageText = document.getElementById('rooms-page');
+      const totalPages = Math.max(1, Math.ceil(total / roomsState.limit));
+      pageText.textContent = `Page ${roomsState.page} of ${totalPages}`;
+      document.getElementById('rooms-prev').disabled = roomsState.page <= 1;
+      document.getElementById('rooms-next').disabled = roomsState.page >= totalPages;
+    }
+    document.getElementById('refresh-rooms').addEventListener('click', loadRooms);
+    document.getElementById('rooms-q').addEventListener('input', (e) => { roomsState.q = e.target.value; roomsState.page = 1; loadRooms(); });
+    document.getElementById('rooms-status').addEventListener('change', (e) => { roomsState.status = e.target.value; roomsState.page = 1; loadRooms(); });
+    document.getElementById('rooms-prev').addEventListener('click', () => { roomsState.page = Math.max(1, roomsState.page - 1); loadRooms(); });
+    document.getElementById('rooms-next').addEventListener('click', () => { roomsState.page = roomsState.page + 1; loadRooms(); });
+    document.getElementById('form-room').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = formToJSON(e.target);
+      payload.capacity = Number(payload.capacity);
+      payload.price_per_night = Number(payload.price_per_night);
+      await api('/api/rooms', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+      e.target.reset();
+      loadRooms();
+    });
+
+    // Available
+    async function searchAvailable(params) {
+      const q = new URLSearchParams(params).toString();
+      const data = await api('/api/rooms/available?' + q);
+      const container = document.getElementById('available-results');
+      container.innerHTML = '';
+      data.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-xl border';
+        card.innerHTML = `<div class="font-semibold">Room ${r.number}</div>
+          <div class="text-sm text-gray-400">Type: ${r.type} · Capacity: ${r.capacity}</div>
+          <div class="text-sm text-gray-400">$${r.price_per_night} / night</div>
+          <div class="mt-3"><button class="btn" data-book-room="${r.id}">Book this room</button></div>`;
+        container.appendChild(card);
+      });
+      container.querySelectorAll('[data-book-room]').forEach(btn => btn.addEventListener('click', () => {
+        const form = document.getElementById('form-booking');
+        const searchForm = document.getElementById('form-available');
+        form.room_id.value = btn.dataset.bookRoom;
+        form.check_in.value = searchForm.check_in.value;
+        form.check_out.value = searchForm.check_out.value;
+        activate('bookings');
+      }));
+    }
+    document.getElementById('form-available').addEventListener('submit', (e) => {
+      e.preventDefault();
+      searchAvailable(formToJSON(e.target));
+    });
+
+    // Bookings
+    const bookingsState = { page: 1, limit: 10, q: '' };
+    async function loadBookings() {
+      const qs = new URLSearchParams({ page: bookingsState.page, limit: bookingsState.limit, q: bookingsState.q }).toString();
+      const { total, rows } = await api('/api/bookings?' + qs);
+      const tbody = document.querySelector('#table-bookings tbody');
+      tbody.innerHTML = '';
+      rows.forEach(b => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${b.id}</td>
+          <td class="p-2">${b.guest_name}</td>
+          <td class="p-2">${b.room_number} (${b.room_type})</td>
+          <td class="p-2">${b.check_in}</td>
+          <td class="p-2">${b.check_out}</td>
+          <td class="p-2"><button class="text-red-600" data-del-booking="${b.id}">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('[data-del-booking]').forEach(btn => btn.addEventListener('click', async () => {
+        await api('/api/bookings/' + btn.dataset.delBooking, { method: 'DELETE' });
+        loadBookings();
+        showToast('Booking deleted');
+      }));
+      const pageText = document.getElementById('bookings-page');
+      const totalPages = Math.max(1, Math.ceil(total / bookingsState.limit));
+      pageText.textContent = `Page ${bookingsState.page} of ${totalPages}`;
+      document.getElementById('bookings-prev').disabled = bookingsState.page <= 1;
+      document.getElementById('bookings-next').disabled = bookingsState.page >= totalPages;
+    }
+    document.getElementById('refresh-bookings').addEventListener('click', loadBookings);
+    document.getElementById('bookings-q').addEventListener('input', (e) => { bookingsState.q = e.target.value; bookingsState.page = 1; loadBookings(); });
+    document.getElementById('bookings-prev').addEventListener('click', () => { bookingsState.page = Math.max(1, bookingsState.page - 1); loadBookings(); });
+    document.getElementById('bookings-next').addEventListener('click', () => { bookingsState.page = bookingsState.page + 1; loadBookings(); });
+    document.getElementById('form-booking').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api('/api/bookings', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(formToJSON(e.target)) });
+        e.target.reset();
+        loadBookings();
+        showToast('Booking created');
+      } catch (err) {
+        showToast(err.error || 'Booking failed');
+      }
+    });
+
+    // Assign feature is disabled for now (UI removed)
+
+    // Staff
+    const staffState = { page: 1, limit: 10, q: '' };
+    async function loadStaff() {
+      const qs = new URLSearchParams({ page: staffState.page, limit: staffState.limit, q: staffState.q }).toString();
+      const { total, rows } = await api('/api/staff?' + qs);
+      const tbody = document.querySelector('#table-staff tbody');
+      tbody.innerHTML = '';
+      rows.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${s.id}</td>
+          <td class="p-2">${s.name}</td>
+          <td class="p-2">${s.role}</td>
+          <td class="p-2">${s.phone || ''}</td>
+          <td class="p-2">${s.email || ''}</td>
+          <td class="p-2"><button class="text-red-400" data-del-staff="${s.id}">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('[data-del-staff]').forEach(btn => btn.addEventListener('click', async () => {
+        await api('/api/staff/' + btn.dataset.delStaff, { method: 'DELETE' });
+        loadStaff();
+        showToast('Staff deleted');
+      }));
+      const pageText = document.getElementById('staff-page');
+      const totalPages = Math.max(1, Math.ceil(total / staffState.limit));
+      pageText.textContent = `Page ${staffState.page} of ${totalPages}`;
+      document.getElementById('staff-prev').disabled = staffState.page <= 1;
+      document.getElementById('staff-next').disabled = staffState.page >= totalPages;
+    }
+    document.getElementById('refresh-staff').addEventListener('click', loadStaff);
+    document.getElementById('staff-q').addEventListener('input', (e) => { staffState.q = e.target.value; staffState.page = 1; loadStaff(); });
+    document.getElementById('staff-prev').addEventListener('click', () => { staffState.page = Math.max(1, staffState.page - 1); loadStaff(); });
+    document.getElementById('staff-next').addEventListener('click', () => { staffState.page = staffState.page + 1; loadStaff(); });
+    document.getElementById('form-staff').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await api('/api/staff', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(formToJSON(e.target)) });
+      e.target.reset();
+      loadStaff();
+      showToast('Staff added');
+    });
+
+    // Initial loads
+    loadRooms();
+    loadBookings();
+    loadStaff();
+  </script>
+</body>
+</html>
+
+
