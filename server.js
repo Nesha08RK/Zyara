@@ -1,250 +1,231 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const Database = require('better-sqlite3');
+import express from "express";
+import mysql from "mysql2";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// ✅ Fix for __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const db = new Database(path.join(__dirname, 'hotel.db'));
+const PORT = 3000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public"))); // serve frontend
 
-// Schema initialization
-db.exec(`
-CREATE TABLE IF NOT EXISTS staff (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  role TEXT NOT NULL,
-  phone TEXT,
-  email TEXT UNIQUE
-);
+// ✅ MySQL connection
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "1082005", // change if needed
+  database: "hotel_management"
+});
 
-CREATE TABLE IF NOT EXISTS rooms (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  number TEXT NOT NULL UNIQUE,
-  type TEXT NOT NULL,
-  capacity INTEGER NOT NULL,
-  price_per_night REAL NOT NULL,
-  status TEXT NOT NULL DEFAULT 'available'
-);
-
-CREATE TABLE IF NOT EXISTS bookings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  guest_name TEXT NOT NULL,
-  guest_phone TEXT,
-  room_id INTEGER NOT NULL,
-  check_in DATE NOT NULL,
-  check_out DATE NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (room_id) REFERENCES rooms(id)
-);
-
-CREATE TABLE IF NOT EXISTS staff_assignments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  booking_id INTEGER NOT NULL,
-  staff_id INTEGER NOT NULL,
-  assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(booking_id, staff_id),
-  FOREIGN KEY (booking_id) REFERENCES bookings(id),
-  FOREIGN KEY (staff_id) REFERENCES staff(id)
-);
-`);
-
-// Utility: date overlap
-function hasOverlap(aStart, aEnd, bStart, bEnd) {
-  return new Date(aStart) < new Date(bEnd) && new Date(bStart) < new Date(aEnd);
-}
-
-function buildPaginationAndSort(query, allowedSort = []) {
-  const page = Math.max(parseInt(query.page || '1', 10), 1);
-  const limit = Math.min(Math.max(parseInt(query.limit || '10', 10), 1), 100);
-  const offset = (page - 1) * limit;
-  let sort = '';
-  if (query.sort && allowedSort.includes(query.sort)) {
-    const dir = (query.dir || 'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
-    sort = ` ORDER BY ${query.sort} ${dir} `;
+db.connect(err => {
+  if (err) {
+    console.error("❌ MySQL connection error:", err);
+    process.exit(1);
   }
-  return { page, limit, offset, sort };
-}
-
-// Staff routes
-app.get('/api/staff', (req, res) => {
-  const { q } = req.query;
-  const { limit, offset, sort } = buildPaginationAndSort(req.query, ['id','name','role']);
-  const where = q ? ' WHERE name LIKE ? OR role LIKE ? OR phone LIKE ? OR email LIKE ? ' : ' ';
-  const params = q ? Array(4).fill(`%${q}%`) : [];
-  const total = db.prepare('SELECT COUNT(*) as c FROM staff' + (q ? ' WHERE name LIKE ? OR role LIKE ? OR phone LIKE ? OR email LIKE ? ' : '')).get(...params).c;
-  const rows = db.prepare('SELECT * FROM staff' + where + (sort || ' ORDER BY id DESC ') + ' LIMIT ? OFFSET ?').all(...params, limit, offset);
-  res.json({ total, rows });
+  console.log("✅ Connected to MySQL database.");
 });
 
-app.post('/api/staff', (req, res) => {
-  const { name, role, phone, email } = req.body;
-  const stmt = db.prepare('INSERT INTO staff (name, role, phone, email) VALUES (?, ?, ?, ?)');
-  const info = stmt.run(name, role, phone || null, email || null);
-  res.json({ id: info.lastInsertRowid });
-});
+// ==================== API ROUTES ====================
 
-app.put('/api/staff/:id', (req, res) => {
-  const { id } = req.params;
-  const { name, role, phone, email } = req.body;
-  const stmt = db.prepare('UPDATE staff SET name=?, role=?, phone=?, email=? WHERE id=?');
-  const info = stmt.run(name, role, phone || null, email || null, id);
-  res.json({ changes: info.changes });
-});
+// ✅ Get all rooms with pagination + filters
+app.get("/api/rooms", (req, res) => {
+  const { page = 1, limit = 10, q = "", status = "" } = req.query;
+  const offset = (page - 1) * limit;
 
-app.delete('/api/staff/:id', (req, res) => {
-  const { id } = req.params;
-  const info = db.prepare('DELETE FROM staff WHERE id=?').run(id);
-  res.json({ changes: info.changes });
-});
+  let where = "WHERE 1=1";
+  let params = [];
 
-// Room routes
-app.get('/api/rooms', (req, res) => {
-  const { q, type, status } = req.query;
-  const { limit, offset, sort } = buildPaginationAndSort(req.query, ['id','number','type','price_per_night','capacity']);
-  const clauses = [];
-  const params = [];
-  if (q) { clauses.push('(number LIKE ? OR type LIKE ?)'); params.push(`%${q}%`, `%${q}%`); }
-  if (type) { clauses.push('type = ?'); params.push(type); }
-  if (status) { clauses.push('status = ?'); params.push(status); }
-  const where = clauses.length ? ' WHERE ' + clauses.join(' AND ') + ' ' : ' ';
-  const total = db.prepare('SELECT COUNT(*) as c FROM rooms' + where).get(...params).c;
-  const rows = db.prepare('SELECT * FROM rooms' + where + (sort || ' ORDER BY number ') + ' LIMIT ? OFFSET ?').all(...params, limit, offset);
-  res.json({ total, rows });
-});
+  if (q) {
+    where += " AND (number LIKE ? OR type LIKE ?)";
+    params.push(`%${q}%`, `%${q}%`);
+  }
+  if (status) {
+    where += " AND status=?";
+    params.push(status);
+  }
 
-app.post('/api/rooms', (req, res) => {
-  const { number, type, capacity, price_per_night, status } = req.body;
-  const stmt = db.prepare('INSERT INTO rooms (number, type, capacity, price_per_night, status) VALUES (?, ?, ?, ?, ?)');
-  const info = stmt.run(number, type, capacity, price_per_night, status || 'available');
-  res.json({ id: info.lastInsertRowid });
-});
+  db.query(`SELECT COUNT(*) AS total FROM rooms ${where}`, params, (err, countResult) => {
+    if (err) return res.status(500).json({ error: err.message });
 
-app.put('/api/rooms/:id', (req, res) => {
-  const { id } = req.params;
-  const { number, type, capacity, price_per_night, status } = req.body;
-  const stmt = db.prepare('UPDATE rooms SET number=?, type=?, capacity=?, price_per_night=?, status=? WHERE id=?');
-  const info = stmt.run(number, type, capacity, price_per_night, status, id);
-  res.json({ changes: info.changes });
-});
-
-app.delete('/api/rooms/:id', (req, res) => {
-  const { id } = req.params;
-  const info = db.prepare('DELETE FROM rooms WHERE id=?').run(id);
-  res.json({ changes: info.changes });
-});
-
-// Available rooms search
-app.get('/api/rooms/available', (req, res) => {
-  const { check_in, check_out, type } = req.query;
-  const rooms = db.prepare('SELECT * FROM rooms WHERE status = \'available\'' + (type ? ' AND type = ?' : '')).all(type ? [type] : []);
-  const bookings = db.prepare('SELECT * FROM bookings').all();
-  const filtered = rooms.filter(r => {
-    const conflicts = bookings.filter(b => b.room_id === r.id && hasOverlap(check_in, check_out, b.check_in, b.check_out));
-    return conflicts.length === 0;
+    db.query(
+      `SELECT * FROM rooms ${where} LIMIT ?, ?`,
+      [...params, Number(offset), Number(limit)],
+      (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ total: countResult[0].total, rows });
+      }
+    );
   });
-  res.json(filtered);
 });
 
-// Booking routes
-app.get('/api/bookings', (req, res) => {
-  const { q } = req.query;
-  const { limit, offset, sort } = buildPaginationAndSort(req.query, ['id','check_in','check_out','created_at']);
-  const where = q ? ' WHERE guest_name LIKE ? OR guest_phone LIKE ? ' : ' ';
-  const params = q ? [`%${q}%`, `%${q}%`] : [];
-  const total = db.prepare('SELECT COUNT(*) as c FROM bookings' + where).get(...params).c;
-  const rows = db.prepare(`
-    SELECT b.*, r.number AS room_number, r.type AS room_type
-    FROM bookings b JOIN rooms r ON r.id = b.room_id
-    ${where}
-    ${sort || ' ORDER BY b.id DESC '}
-    LIMIT ? OFFSET ?
-  `).all(...params, limit, offset);
-  res.json({ total, rows });
+// ✅ Add a new room
+app.post("/api/rooms", (req, res) => {
+  const { number, type, capacity, price_per_night, status } = req.body;
+  if (!number || !type || !capacity || !price_per_night) {
+    return res.status(400).json({ error: "Missing room details" });
+  }
+  db.query(
+    "INSERT INTO rooms (number, type, capacity, price_per_night, status) VALUES (?, ?, ?, ?, ?)",
+    [number, type, capacity, price_per_night, status || "available"],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "✅ Room added successfully", roomId: result.insertId });
+    }
+  );
 });
 
-app.post('/api/bookings', (req, res) => {
+// ✅ Delete room
+app.delete("/api/rooms/:id", (req, res) => {
+  db.query("DELETE FROM rooms WHERE id=?", [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "✅ Room deleted" });
+  });
+});
+
+// ✅ Search available rooms
+app.get("/api/rooms/available", (req, res) => {
+  const { check_in, check_out, type } = req.query;
+
+  let query = `
+    SELECT * FROM rooms 
+    WHERE status='available' 
+    AND id NOT IN (
+      SELECT room_id FROM bookings 
+      WHERE (check_in <= ? AND check_out >= ?)
+    )
+  `;
+  let params = [check_out, check_in];
+
+  if (type) {
+    query += " AND type=?";
+    params.push(type);
+  }
+
+  db.query(query, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// ✅ Get bookings (paginated + search)
+app.get("/api/bookings", (req, res) => {
+  const { page = 1, limit = 10, q = "" } = req.query;
+  const offset = (page - 1) * limit;
+
+  let where = "WHERE 1=1";
+  let params = [];
+
+  if (q) {
+    where += " AND (b.guest_name LIKE ? OR b.guest_phone LIKE ?)";
+    params.push(`%${q}%`, `%${q}%`);
+  }
+
+  db.query(`SELECT COUNT(*) AS total FROM bookings b ${where}`, params, (err, countResult) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.query(
+      `SELECT b.id, b.guest_name, b.guest_phone, b.check_in, b.check_out, 
+              r.number AS room_number, r.type AS room_type
+       FROM bookings b 
+       JOIN rooms r ON b.room_id = r.id
+       ${where} LIMIT ?, ?`,
+      [...params, Number(offset), Number(limit)],
+      (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ total: countResult[0].total, rows });
+      }
+    );
+  });
+});
+
+// ✅ Add booking
+app.post("/api/bookings", (req, res) => {
   const { guest_name, guest_phone, room_id, check_in, check_out } = req.body;
-  // prevent overlaps
-  const overlaps = db.prepare('SELECT * FROM bookings WHERE room_id = ?').all(room_id).some(b => hasOverlap(check_in, check_out, b.check_in, b.check_out));
-  if (overlaps) return res.status(400).json({ error: 'Room already booked for selected dates' });
-  const stmt = db.prepare('INSERT INTO bookings (guest_name, guest_phone, room_id, check_in, check_out) VALUES (?, ?, ?, ?, ?)');
-  const info = stmt.run(guest_name, guest_phone || null, room_id, check_in, check_out);
-  res.json({ id: info.lastInsertRowid });
+  if (!guest_name || !room_id || !check_in || !check_out) {
+    return res.status(400).json({ error: "Missing booking details" });
+  }
+  db.query(
+    "INSERT INTO bookings (guest_name, guest_phone, room_id, check_in, check_out) VALUES (?, ?, ?, ?, ?)",
+    [guest_name, guest_phone || null, room_id, check_in, check_out],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "✅ Booking created successfully", bookingId: result.insertId });
+    }
+  );
 });
 
-app.put('/api/bookings/:id', (req, res) => {
-  const { id } = req.params;
-  const { guest_name, guest_phone, room_id, check_in, check_out } = req.body;
-  const overlaps = db.prepare('SELECT * FROM bookings WHERE room_id = ? AND id != ?').all(room_id, id).some(b => hasOverlap(check_in, check_out, b.check_in, b.check_out));
-  if (overlaps) return res.status(400).json({ error: 'Room already booked for selected dates' });
-  const info = db.prepare('UPDATE bookings SET guest_name=?, guest_phone=?, room_id=?, check_in=?, check_out=? WHERE id=?').run(guest_name, guest_phone || null, room_id, check_in, check_out, id);
-  res.json({ changes: info.changes });
+// ✅ Delete booking
+app.delete("/api/bookings/:id", (req, res) => {
+  db.query("DELETE FROM bookings WHERE id=?", [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "✅ Booking deleted" });
+  });
 });
 
-app.delete('/api/bookings/:id', (req, res) => {
-  const { id } = req.params;
-  const info = db.prepare('DELETE FROM bookings WHERE id=?').run(id);
-  res.json({ changes: info.changes });
+// ✅ Get staff
+app.get("/api/staff", (req, res) => {
+  const { page = 1, limit = 10, q = "" } = req.query;
+  const offset = (page - 1) * limit;
+
+  let where = "WHERE 1=1";
+  let params = [];
+
+  if (q) {
+    where += " AND (name LIKE ? OR role LIKE ? OR email LIKE ?)";
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+  }
+
+  db.query(`SELECT COUNT(*) AS total FROM staff ${where}`, params, (err, countResult) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.query(
+      `SELECT * FROM staff ${where} LIMIT ?, ?`,
+      [...params, Number(offset), Number(limit)],
+      (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ total: countResult[0].total, rows });
+      }
+    );
+  });
 });
 
-// Staff availability for a booking window
-app.get('/api/staff/available', (req, res) => {
-  const { check_in, check_out, role } = req.query;
-  // staff with no assignments overlapping the window
-  const allStaff = role
-    ? db.prepare('SELECT * FROM staff WHERE role = ?').all(role)
-    : db.prepare('SELECT * FROM staff').all();
-  const assignments = db.prepare(`
-    SELECT sa.*, b.check_in, b.check_out FROM staff_assignments sa
-    JOIN bookings b ON b.id = sa.booking_id
-  `).all();
-  const available = allStaff.filter(s => !assignments.some(a => a.staff_id === s.id && hasOverlap(check_in, check_out, a.check_in, a.check_out)));
-  res.json(available);
+// ✅ Add staff
+app.post("/api/staff", (req, res) => {
+  const { name, role, phone, email } = req.body;
+  if (!name || !role) return res.status(400).json({ error: "Missing staff details" });
+  db.query(
+    "INSERT INTO staff (name, role, phone, email) VALUES (?, ?, ?, ?)",
+    [name, role, phone || null, email || null],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "✅ Staff added successfully", staffId: result.insertId });
+    }
+  );
 });
 
-// Assign staff to booking
-app.post('/api/assignments', (req, res) => {
-  const { booking_id, staff_id } = req.body;
-  const booking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(booking_id);
-  if (!booking) return res.status(404).json({ error: 'Booking not found' });
-  // ensure staff not overlapping
-  const conflicts = db.prepare(`
-    SELECT sa.*, b.check_in, b.check_out FROM staff_assignments sa
-    JOIN bookings b ON b.id = sa.booking_id
-    WHERE sa.staff_id = ?
-  `).all(staff_id).some(a => hasOverlap(booking.check_in, booking.check_out, a.check_in, a.check_out));
-  if (conflicts) return res.status(400).json({ error: 'Staff already assigned during these dates' });
-  const info = db.prepare('INSERT OR IGNORE INTO staff_assignments (booking_id, staff_id) VALUES (?, ?)').run(booking_id, staff_id);
-  res.json({ id: info.lastInsertRowid });
+// ✅ Delete staff
+app.delete("/api/staff/:id", (req, res) => {
+  db.query("DELETE FROM staff WHERE id=?", [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "✅ Staff deleted" });
+  });
 });
 
-// List assignments for a booking
-app.get('/api/assignments', (req, res) => {
-  const { booking_id } = req.query;
-  const rows = db.prepare(`
-    SELECT sa.id, s.name, s.role, s.phone, s.email
-    FROM staff_assignments sa JOIN staff s ON s.id = sa.staff_id
-    WHERE sa.booking_id = ?
-  `).all(booking_id);
-  res.json(rows);
+// =====================================================
+
+// Serve frontend
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Unassign
-app.delete('/api/assignments/:id', (req, res) => {
-  const { id } = req.params;
-  const info = db.prepare('DELETE FROM staff_assignments WHERE id = ?').run(id);
-  res.json({ changes: info.changes });
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
-
-// Fallback to SPA (Express v5 compatible wildcard)
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-
