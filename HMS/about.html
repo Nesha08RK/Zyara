@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Zyara</title>
+    <link rel="stylesheet" href="home-styles.css">
+    <link rel="stylesheet" href="about-styles.css">
+    <link rel="stylesheet" href="css/dropdown-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- API Scripts -->
+    <script src="js/dropdown.js" defer></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-crown"></i>
+                <span>Zyara</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="home.html" class="nav-link">Home</a></li>
+                <li><a href="booking.html" class="nav-link">Rooms & Booking</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+                <li><a href="about.html" class="nav-link active">About</a></li>
+                <li class="dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Role</span>
+                        <i class="fas fa-caret-down"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <span>User</span>
+                            <span class="role-indicator role-user">Current</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Admin</span>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="container">
+            <h1>About Zyara</h1>
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>Our Story</h2>
+                    <p>Welcome to Zyara, where luxury meets comfort. Established in 2024, we have been dedicated to providing our guests with exceptional hospitality experiences that combine modern amenities with traditional Indian warmth.</p>
+                    
+                    <h2>Our Mission</h2>
+                    <p>At Zyara, our mission is to create memorable stays for our guests by offering personalized service, luxurious accommodations, and authentic experiences that reflect the rich cultural heritage of India.</p>
+
+                    <h2>Why Choose Us</h2>
+                    <div class="features-grid">
+                        <div class="feature">
+                            <i class="fas fa-concierge-bell"></i>
+                            <h3>Premium Service</h3>
+                            <p>24/7 concierge service to cater to all your needs</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-spa"></i>
+                            <h3>Wellness Center</h3>
+                            <p>State-of-the-art spa and fitness facilities</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-utensils"></i>
+                            <h3>Fine Dining</h3>
+                            <p>Multiple restaurants offering international and local cuisine</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-wifi"></i>
+                            <h3>Modern Amenities</h3>
+                            <p>High-speed internet and smart room controls</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© 2024 Zyara. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="home-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyara - Welcome to Zyara</title>
+    <link rel="stylesheet" href="home-styles.css">
+    <link rel="stylesheet" href="css/dropdown-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- API Scripts -->
+    <script src="js/dropdown.js" defer></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-crown"></i>
+                <span>Zyara</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="home.html" class="nav-link active">Home</a></li>
+                <li><a href="booking.html" class="nav-link">Rooms & Booking</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li class="dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Role</span>
+                        <i class="fas fa-caret-down"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <span>User</span>
+                            <span class="role-indicator role-user">Current</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Admin</span>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to Zyara</h1>
+            <p class="hero-subtitle">Experience luxury, comfort, and unforgettable moments at our world-class hotel</p>
+            <div class="hero-buttons">
+                <button class="btn-primary" onclick="window.location.href='booking.html'">
+                    <i class="fas fa-bed"></i>
+                    Book Now
+                </button>
+                <button class="btn-secondary" onclick="scrollToSection('about')">
+                    <i class="fas fa-info-circle"></i>
+                    Learn More
+                </button>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop" alt="Luxury Hotel">
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>About Our Hotel</h2>
+                <p>Discover the perfect blend of luxury and comfort</p>
+            </div>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Your Perfect Getaway</h3>
+                    <p>Nestled in the heart of the city, our luxury hotel offers an unparalleled experience with world-class amenities, exquisite dining, and breathtaking views. Whether you're here for business or leisure, we ensure every moment is memorable.</p>
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i class="fas fa-wifi"></i>
+                            <span>Free High-Speed WiFi</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-swimming-pool"></i>
+                            <span>Infinity Pool</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-utensils"></i>
+                            <span>Fine Dining</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-spa"></i>
+                            <span>Spa & Wellness</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&h=400&fit=crop" alt="Hotel Interior">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Links Section -->
+    <section class="quick-links">
+        <div class="container">
+            <div class="section-header">
+                <h2>Quick Links</h2>
+                <p>Everything you need at your fingertips</p>
+            </div>
+            <div class="links-grid">
+                <div class="link-card">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3>Book a Room</h3>
+                    <p>Reserve your perfect room with our easy booking system</p>
+                    <button class="btn-outline" onclick="window.location.href='booking.html'">Book Now</button>
+                </div>
+                <div class="link-card">
+                    <i class="fas fa-phone"></i>
+                    <h3>Contact Us</h3>
+                    <p>Get in touch with our friendly staff for any inquiries</p>
+                    <button class="btn-outline" onclick="scrollToSection('contact')">Contact</button>
+                </div>
+                <div class="link-card">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3>Location</h3>
+                    <p>Find us in the heart of the city with easy access</p>
+                    <button class="btn-outline" onclick="openMap()">View Map</button>
+                </div>
+                <div class="link-card">
+                    <i class="fas fa-star"></i>
+                    <h3>Reviews</h3>
+                    <p>See what our guests say about their experience</p>
+                    <button class="btn-outline" onclick="showReviews()">Read Reviews</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rooms Preview Section -->
+    <section id="rooms" class="rooms-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Rooms</h2>
+                <p>Choose from our selection of luxurious accommodations</p>
+            </div>
+            <div class="rooms-grid">
+                <div class="room-card">
+                    <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop" alt="Standard Room">
+                    <div class="room-info">
+                        <h3>Standard Room</h3>
+                        <p>Comfortable and elegant rooms perfect for your stay</p>
+                        <div class="room-price">From ₹9,960/night</div>
+                        <button class="btn-primary" onclick="window.location.href='booking.html'">Book Now</button>
+                    </div>
+                </div>
+                <div class="room-card">
+                    <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400&h=300&fit=crop" alt="Deluxe Room">
+                    <div class="room-info">
+                        <h3>Deluxe Room</h3>
+                        <p>Spacious rooms with premium amenities and city views</p>
+                        <div class="room-price">From ₹16,600/night</div>
+                        <button class="btn-primary" onclick="window.location.href='booking.html'">Book Now</button>
+                    </div>
+                </div>
+                <div class="room-card">
+                    <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=300&fit=crop" alt="Suite">
+                    <div class="room-info">
+                        <h3>Luxury Suite</h3>
+                        <p>Ultimate luxury with separate living area and premium services</p>
+                        <div class="room-price">From $350/night</div>
+                        <button class="btn-primary" onclick="window.location.href='booking.html'">Book Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Contact Us</h2>
+                <p>We'd love to hear from you</p>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h4>Address</h4>
+                            <p>Perundurai</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h4>Phone</h4>
+                            <p>+91 123 456 7890</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>Email</h4>
+                            <p>info@Zyara.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Zyara</h3>
+                    <p>Experience the perfect blend of luxury and comfort.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#rooms">Rooms</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#">Spa & Wellness</a></li>
+                        <li><a href="#">Fine Dining</a></li>
+                        <li><a href="#">Conference Rooms</a></li>
+                        <li><a href="#">Airport Shuttle</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Luxury Hotel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="home-script.js"></script>
+</body>
+</html>
