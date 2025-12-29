@@ -7,8 +7,21 @@ CREATE TABLE IF NOT EXISTS staff (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   role VARCHAR(50) NOT NULL,
+  phone VARCHAR(20) UNIQUE,
+  email VARCHAR(100) UNIQUE,
+  status ENUM('available','assigned','inactive') DEFAULT 'available'
+);
+
+-- ==================== DELETED STAFF TABLE ====================
+CREATE TABLE IF NOT EXISTS deleted_staff (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  staff_id INT,
+  name VARCHAR(100) NOT NULL,
+  role VARCHAR(50) NOT NULL,
   phone VARCHAR(20),
-  email VARCHAR(100)
+  email VARCHAR(100),
+  status ENUM('available','assigned','inactive') DEFAULT 'available',
+  deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ==================== ROOMS TABLE ====================
@@ -18,7 +31,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   type VARCHAR(50) NOT NULL,           -- e.g. "Deluxe", "Suite"
   capacity INT NOT NULL,               -- number of people
   price_per_night DECIMAL(10,2) NOT NULL,
-  status ENUM('available', 'maintenance') DEFAULT 'available'
+  status ENUM('available', 'booked', 'maintenance') DEFAULT 'available'
 );
 
 -- ==================== BOOKINGS TABLE ====================
@@ -28,7 +41,9 @@ CREATE TABLE IF NOT EXISTS bookings (
   guest_phone VARCHAR(20),
   room_id INT NOT NULL,
   check_in DATE NOT NULL,
+  check_in_time TIME,
   check_out DATE NOT NULL,
+  check_out_time TIME,
   FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 );
 

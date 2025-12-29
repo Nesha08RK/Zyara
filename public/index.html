@@ -1,8 +1,8 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hotel Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,6 +42,8 @@
     .input::placeholder { color: #9aa7ad; }
     .input:focus { outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,.15); border-color: var(--primary-600); }
 
+    .field-error { color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; }
+
     .chip-available { background: #eafff7; color: #0d7a57; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; }
     .chip-maint { background: #fff7e6; color: #a16207; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; }
 
@@ -49,6 +51,12 @@
     .table td { color: #111827; }
     .toast { position: fixed; right: 1rem; bottom: 1rem; background: #0e2f2c; border: 1px solid rgba(16,185,129,.35); color: #eafff7; padding: .75rem 1rem; border-radius: .75rem; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
     .hidden { display: none; }
+    .muted-text { color: #6b7280; }
+    .max-w-10rem { max-width: 10rem; }
+    .page-text-color { color: #9fb0d0; }
+    .unlock-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(11,31,30,.85), rgba(11,31,30,.92)); backdrop-filter:blur(6px); z-index:50; }
+    .unlock-card { width:100%; max-width:420px; }
+    .muted-small { color:#6b7280; }
   </style>
   <script>
     tailwind.config = { theme: { extend: { colors: { brand: '#4f46e5' } } } }
@@ -62,10 +70,10 @@
         <!--<h1 class="text-xl font-semibold title">Zyara</h1>-->
       </div>
       <nav class="flex gap-2" id="tabs">
-        <button data-tab="rooms" class="px-3 py-2 rounded-md text-sm nav-btn">Rooms</button>
-        <button data-tab="available" class="px-3 py-2 rounded-md text-sm nav-btn">Available</button>
-        <button data-tab="bookings" class="px-3 py-2 rounded-md text-sm nav-btn">Bookings</button>
-        <button data-tab="staff" class="px-3 py-2 rounded-md text-sm nav-btn">Staff</button>
+        <button type="button" data-tab="rooms" class="px-3 py-2 rounded-md text-sm nav-btn">Rooms</button>
+        <button type="button" data-tab="available" class="px-3 py-2 rounded-md text-sm nav-btn">Available</button>
+        <button type="button" data-tab="bookings" class="px-3 py-2 rounded-md text-sm nav-btn">Bookings</button>
+        <button type="button" data-tab="staff" class="px-3 py-2 rounded-md text-sm nav-btn">Staff</button>
       </nav>
     </div>
   </header>
@@ -77,14 +85,12 @@
         <div class="md:col-span-1 card bg-white rounded-xl p-5">
           <h2 class="text-lg font-semibold mb-3">Add Room</h2>
           <form id="form-room" class="space-y-3">
-            <input class="input" name="number" placeholder="Room Number" required />
-            <input class="input" name="type" placeholder="Type (Deluxe, Suite)" required />
-            <input class="input" name="capacity" type="number" placeholder="Capacity" required />
-            <input class="input" name="price_per_night" type="number" step="0.01" placeholder="Price per Night" required />
-            <select class="input" name="status">
-              <option value="available">available</option>
-              <option value="maintenance">maintenance</option>
-            </select>
+            <input type="text" class="input" name="number" placeholder="Room Number" required>
+            <input type="text" class="input" name="type" placeholder="Type (Deluxe, Suite)" required>
+            <input class="input" name="capacity" type="number" placeholder="Capacity" required>
+            <input class="input" name="price_per_night" type="number" step="0.01" placeholder="Price per Night" required>
+            <input type="hidden" name="status" value="available">
+            <small class="muted-text">Rooms are created as 'available' by default</small>
             <button class="btn w-full" type="submit">Save</button>
           </form>
         </div>
@@ -93,14 +99,14 @@
             <h2 class="text-lg font-semibold">Rooms</h2>
           </div>
           <div class="mb-3 flex gap-2 items-center">
-            <input id="rooms-q" class="input" placeholder="Search rooms by number or type" />
-            <select id="rooms-status" class="input" style="max-width: 10rem;">
+            <input id="rooms-q" type="search" class="input" placeholder="Search rooms by number or type">
+            <select id="rooms-status" class="input max-w-10rem">
               <option value="">All status</option>
               <option value="available">Available</option>
               <option value="maintenance">Maintenance</option>
             </select>
             <div class="flex-1"></div>
-            <button id="refresh-rooms" class="btn btn-secondary">Refresh</button>
+            <button type="button" id="refresh-rooms" class="btn btn-secondary">Refresh</button>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full text-sm table" id="table-rooms">
@@ -118,9 +124,9 @@
             </table>
           </div>
           <div class="flex items-center gap-2 mt-3 justify-end">
-            <button id="rooms-prev" class="btn btn-secondary">Prev</button>
-            <span id="rooms-page" class="text-sm" style="color:#9fb0d0;"></span>
-            <button id="rooms-next" class="btn btn-secondary">Next</button>
+            <button type="button" id="rooms-prev" class="btn btn-secondary">Prev</button>
+            <span id="rooms-page" class="text-sm page-text-color"></span>
+            <button type="button" id="rooms-next" class="btn btn-secondary">Next</button>
           </div>
         </div>
       </div>
@@ -131,10 +137,17 @@
       <div class="card rounded-xl p-5 space-y-4">
         <h2 class="text-lg font-semibold">Search Available Rooms</h2>
         <form id="form-available" class="grid md:grid-cols-4 gap-3">
-          <input class="input" name="check_in" type="date" required />
-          <input class="input" name="check_out" type="date" required />
-          <input class="input" name="type" placeholder="Type (optional)" />
-          <button class="btn" type="submit">Search</button>
+          <input id="avail-check-in" class="input" name="check_in" type="date">
+          <input id="avail-check-out" class="input" name="check_out" type="date">
+          <select id="avail-type" name="type" class="input">
+            <option value="">Any type (optional)</option>
+            <option value="Deluxe">Deluxe</option>
+            <option value="Suite">Suite</option>
+            <option value="Standard">Standard</option>
+            <option value="Single">Single</option>
+            <option value="Double">Double</option>
+          </select>
+          <button id="search-now" type="submit" class="btn btn-secondary">Search Now</button>
         </form>
         <div id="available-results" class="grid md:grid-cols-3 gap-4"></div>
       </div>
@@ -146,11 +159,22 @@
         <div class="md:col-span-1 card bg-white rounded-xl p-5">
           <h2 class="text-lg font-semibold mb-3">Create Booking</h2>
           <form id="form-booking" class="space-y-3">
-            <input class="input" name="guest_name" placeholder="Guest Name" required />
-            <input class="input" name="guest_phone" placeholder="Guest Phone" />
-            <input class="input" name="room_id" type="number" placeholder="Room ID" required />
-            <input class="input" name="check_in" type="date" required />
-            <input class="input" name="check_out" type="date" required />
+              <input type="text" class="input" name="guest_name" placeholder="Guest Name" required>
+            <div class="grid grid-cols-2 gap-2">
+              <select class="input" name="id_proof_type" required>
+                <option value="">Select ID type</option>
+                <option value="Aadhaar">Aadhaar</option>
+                <option value="Passport">Passport</option>
+                <option value="Other">Other</option>
+              </select>
+                <input type="text" class="input" name="id_proof_number" placeholder="ID number" required>
+            </div>
+              <input type="tel" class="input" name="guest_phone" placeholder="Guest Phone">
+              <input class="input" name="room_id" type="number" placeholder="Room ID" required>
+              <input class="input" name="check_in" type="date" required>
+              <input class="input" name="check_in_time" type="time" required>
+              <input class="input" name="check_out" type="date" required>
+              <input class="input" name="check_out_time" type="time" required>
             <button class="btn w-full" type="submit">Book</button>
           </form>
         </div>
@@ -159,9 +183,9 @@
             <h2 class="text-lg font-semibold">Bookings</h2>
           </div>
           <div class="mb-3 flex gap-2 items-center">
-            <input id="bookings-q" class="input" placeholder="Search bookings by guest or phone" />
+            <input id="bookings-q" type="search" class="input" placeholder="Search bookings by guest or phone">
             <div class="flex-1"></div>
-            <button id="refresh-bookings" class="btn btn-secondary">Refresh</button>
+            <button type="button" id="refresh-bookings" class="btn btn-secondary">Refresh</button>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full text-sm table" id="table-bookings">
@@ -169,9 +193,13 @@
                 <tr>
                   <th class="p-2">#</th>
                   <th class="p-2">Guest</th>
+                  <th class="p-2">Room ID</th>
                   <th class="p-2">Room</th>
+                  <th class="p-2">Staff ID</th>
+                  <th class="p-2">Staff</th>
                   <th class="p-2">Check-in</th>
                   <th class="p-2">Check-out</th>
+                  <th class="p-2">Status</th>
                   <th class="p-2">Actions</th>
                 </tr>
               </thead>
@@ -179,9 +207,9 @@
             </table>
           </div>
           <div class="flex items-center gap-2 mt-3 justify-end">
-            <button id="bookings-prev" class="btn btn-secondary">Prev</button>
-            <span id="bookings-page" class="text-sm" style="color:#9fb0d0;"></span>
-            <button id="bookings-next" class="btn btn-secondary">Next</button>
+            <button type="button" id="bookings-prev" class="btn btn-secondary">Prev</button>
+            <span id="bookings-page" class="text-sm page-text-color"></span>
+            <button type="button" id="bookings-next" class="btn btn-secondary">Next</button>
           </div>
         </div>
       </div>
@@ -193,10 +221,19 @@
         <div class="md:col-span-1 card bg-white rounded-xl p-5">
           <h2 class="text-lg font-semibold mb-3">Add Staff</h2>
           <form id="form-staff" class="space-y-3">
-            <input class="input" name="name" placeholder="Name" required />
-            <input class="input" name="role" placeholder="Role" required />
-            <input class="input" name="phone" placeholder="Phone" />
-            <input class="input" name="email" type="email" placeholder="Email" />
+              <input type="text" class="input" name="name" placeholder="Name" required>
+              <input type="text" class="input" name="role" placeholder="Role" required>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="input" name="id_proof_type" required>
+                  <option value="">Select ID type</option>
+                  <option value="Aadhaar">Aadhaar</option>
+                  <option value="Passport">Passport</option>
+                  <option value="Other">Other</option>
+                </select>
+                <input type="text" class="input" name="id_proof_number" placeholder="ID number" required>
+              </div>
+            <input type="tel" class="input" name="phone" placeholder="Phone">
+            <input class="input" name="email" type="email" placeholder="Email">
             <button class="btn w-full" type="submit">Save</button>
           </form>
         </div>
@@ -205,19 +242,20 @@
             <h2 class="text-lg font-semibold">Staff</h2>
           </div>
           <div class="mb-3 flex gap-2 items-center">
-            <input id="staff-q" class="input" placeholder="Search staff by name, role, email" />
+            <input id="staff-q" type="search" class="input" placeholder="Search staff by name, role, email">
             <div class="flex-1"></div>
-            <button id="refresh-staff" class="btn btn-secondary">Refresh</button>
+            <button type="button" id="refresh-staff" class="btn btn-secondary">Refresh</button>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full text-sm table" id="table-staff">
               <thead class="text-left">
                 <tr>
-                  <th class="p-2">#</th>
+                  <th class="p-2">Staff ID</th>
                   <th class="p-2">Name</th>
                   <th class="p-2">Role</th>
                   <th class="p-2">Phone</th>
-                  <th class="p-2">Email</th>
+                    <th class="p-2">Email</th>
+                    <th class="p-2">Status</th>
                   <th class="p-2">Actions</th>
                 </tr>
               </thead>
@@ -225,9 +263,9 @@
             </table>
           </div>
           <div class="flex items-center gap-2 mt-3 justify-end">
-            <button id="staff-prev" class="btn btn-secondary">Prev</button>
-            <span id="staff-page" class="text-sm" style="color:#9fb0d0;"></span>
-            <button id="staff-next" class="btn btn-secondary">Next</button>
+            <button type="button" id="staff-prev" class="btn btn-secondary">Prev</button>
+            <span id="staff-page" class="text-sm page-text-color"></span>
+            <button type="button" id="staff-next" class="btn btn-secondary">Next</button>
           </div>
         </div>
       </div>
@@ -235,23 +273,21 @@
   </main>
   <div id="toast" class="toast hidden"></div>
   <!-- Unlock overlay for receptionist keyword -->
-  <div id="unlock-overlay" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(11,31,30,.85), rgba(11,31,30,.92));backdrop-filter:blur(6px);z-index:50;">
-    <div style="width:100%;max-width:420px" class="card p-6">
+  <div id="unlock-overlay" class="unlock-overlay">
+    <div class="card p-6 unlock-card">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-9 h-9 rounded-lg brand text-white grid place-items-center font-semibold">HM</div>
         <div>
           <div class="text-lg font-semibold">Enter access keyword</div>
-          <div class="text-sm" style="color:#6b7280">Press Ctrl+Shift+Z to show this dialog</div>
+          <div class="text-sm muted-small">Press Ctrl+Shift+Z to show this dialog</div>
         </div>
       </div>
       <form id="unlock-form" class="space-y-3">
-        <input class="input" name="keyword" type="password" placeholder="Keyword" autofocus />
+        <input class="input" name="keyword" type="password" placeholder="Keyword" autofocus>
         <button class="btn w-full" type="submit">Unlock</button>
       </form>
     </div>
   </div>
-
-  
 
   <script>
     const tabs = document.getElementById('tabs').querySelectorAll('button');
@@ -276,26 +312,301 @@
       window.__toastTimer = setTimeout(() => el.classList.add('hidden'), 1800);
     }
 
-    // Receptionist unlock
+    // ==================== VALIDATION HELPERS ====================
+    
+    // Verhoeff Algorithm for Aadhaar validation
+    const verhoeffTable = {
+      d: [
+        [0,1,2,3,4,5,6,7,8,9],
+        [1,2,3,4,0,6,7,8,9,5],
+        [2,3,4,0,1,7,8,9,5,6],
+        [3,4,0,1,2,8,9,5,6,7],
+        [4,0,1,2,3,9,5,6,7,8],
+        [5,9,8,7,6,0,4,3,2,1],
+        [6,5,9,8,7,1,0,4,3,2],
+        [7,6,5,9,8,2,1,0,4,3],
+        [8,7,6,5,9,3,2,1,0,4],
+        [9,8,7,6,5,4,3,2,1,0]
+      ],
+      p: [
+        [0,1,2,3,4,5,6,7,8,9],
+        [1,2,3,4,0,6,7,8,9,5],
+        [2,3,4,0,1,7,8,9,5,6],
+        [3,4,0,1,2,8,9,5,6,7],
+        [4,0,1,2,3,9,5,6,7,8],
+        [5,9,8,7,6,0,4,3,2,1],
+        [6,5,9,8,7,1,0,4,3,2],
+        [7,6,5,9,8,2,1,0,4,3],
+        [8,7,6,5,9,3,2,1,0,4],
+        [9,8,7,6,5,4,3,2,1,0]
+      ],
+      inv: [0,4,3,2,1,5,6,7,8,9]
+    };
+
+    function validateVerhoeff(num) {
+      const digits = String(num).split('').map(Number);
+      let c = 0;
+      for (let i = digits.length - 1; i >= 0; i--) {
+        c = verhoeffTable.d[c][verhoeffTable.p[(digits.length - i) % 8][digits[i]]];
+      }
+      return verhoeffTable.inv[c] === 0;
+    }
+
+    function isValidAadhaar(aadhaar) {
+      const cleaned = String(aadhaar || '').replace(/\s/g, '');
+      if (!/^\d{12}$/.test(cleaned)) return false;
+      return validateVerhoeff(cleaned);
+    }
+
+    function isValidPhone(phone) {
+      const cleaned = String(phone || '').replace(/\D/g, '');
+      return cleaned.length === 10 && /^[6-9]/.test(cleaned);
+    }
+
+    function isValidEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    function isValidName(name) {
+      return String(name || '').trim().length >= 2 && /^[a-zA-Z\s'-]+$/.test(name);
+    }
+
+    function isValidRoomNumber(number) {
+      return /^[A-Z0-9]{1,10}$/.test(String(number || '').trim());
+    }
+
+    function isValidPrice(price) {
+      const num = parseFloat(price);
+      return !isNaN(num) && num > 0 && num <= 999999;
+    }
+
+    function isValidCapacity(capacity) {
+      const num = parseInt(capacity);
+      return !isNaN(num) && num > 0 && num <= 999;
+    }
+
+    function isValidDateRange(checkIn, checkOut) {
+      const inDate = new Date(checkIn);
+      const outDate = new Date(checkOut);
+      return inDate < outDate;
+    }
+
+    function validateFormField(field, value) {
+      const name = field.name || field.getAttribute('name');
+      const today = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().split('T')[0];
+
+      switch(name) {
+        case 'guest_phone':
+          if (value && !isValidPhone(value)) return 'Invalid phone number (10 digits, starts with 6-9)';
+          break;
+        case 'guest_name':
+          if (!isValidName(value)) return 'Invalid name (min 2 characters, letters only)';
+          break;
+        case 'email':
+          if (value && !isValidEmail(value)) return 'Invalid email format';
+          break;
+        case 'role':
+          if (!value || String(value).trim().length < 2) return 'Role must be at least 2 characters';
+          break;
+        case 'name':
+          if (!isValidName(value)) return 'Invalid name (min 2 characters, letters only)';
+          break;
+        case 'phone':
+          if (value && !isValidPhone(value)) return 'Invalid phone number (10 digits, starts with 6-9)';
+          break;
+        case 'number':
+          if (!isValidRoomNumber(value)) return 'Invalid room number format';
+          break;
+        case 'type':
+          if (!value || String(value).trim().length < 2) return 'Room type must be at least 2 characters';
+          break;
+        case 'capacity':
+          if (!isValidCapacity(value)) return 'Invalid capacity (1-999)';
+          break;
+        case 'price_per_night':
+          if (!isValidPrice(value)) return 'Invalid price (0-999999)';
+          break;
+        case 'room_id':
+          if (!value || parseInt(value) <= 0) return 'Select a valid room';
+          break;
+        case 'id_proof_type':
+          if (!value) return 'Select ID proof type';
+          break;
+        case 'id_proof_number':
+          if (!value) return 'Enter ID proof number';
+          const typeField = field.form && field.form.querySelector('[name="id_proof_type"]');
+          const idType = typeField ? typeField.value : '';
+          if (idType === 'Aadhaar' && !isValidAadhaar(value)) return 'Invalid Aadhaar number';
+          if (idType === 'Passport' && !/^[A-Z0-9]{6,9}$/i.test(String(value).trim())) return 'Invalid passport number';
+          if (idType === 'Other' && String(value).trim().length < 3) return 'Enter a valid ID number';
+          break;
+        case 'check_in':
+          if (!value) return 'Select check-in date';
+          if (value < today) return 'Check-in cannot be in the past';
+          break;
+        case 'check_out':
+          if (!value) return 'Select check-out date';
+          const formCheckIn = field.form && field.form.querySelector('[name="check_in"]') ? field.form.querySelector('[name="check_in"]').value : '';
+          if (formCheckIn && new Date(value) <= new Date(formCheckIn)) return 'Check-out must be after check-in';
+          break;
+      }
+      return null;
+    }
+
+    function showFieldError(field, message) {
+      let errorEl = field.nextElementSibling;
+      if (!errorEl || !errorEl.classList.contains('field-error')) {
+        errorEl = document.createElement('div');
+        errorEl.className = 'field-error text-red-500 text-xs mt-1';
+        field.parentNode.insertBefore(errorEl, field.nextSibling);
+      }
+      errorEl.textContent = message;
+      field.style.borderColor = '#ef4444';
+    }
+
+    function clearFieldError(field) {
+      const errorEl = field.nextElementSibling;
+      if (errorEl && errorEl.classList.contains('field-error')) {
+        errorEl.remove();
+      }
+      field.style.borderColor = '';
+    }
+
+    function validateForm(form) {
+      let isValid = true;
+      const fields = form.querySelectorAll('input, select, textarea');
+      fields.forEach(field => {
+        const error = validateFormField(field, field.value);
+        if (error) {
+          showFieldError(field, error);
+          isValid = false;
+        } else {
+          clearFieldError(field);
+        }
+      });
+      return isValid;
+    }
+
+    function setupFormValidation(formId) {
+      const form = document.getElementById(formId);
+      const fields = form.querySelectorAll('input, select, textarea');
+      fields.forEach(field => {
+        field.addEventListener('blur', () => {
+          const error = validateFormField(field, field.value);
+          if (error) {
+            showFieldError(field, error);
+          } else {
+            clearFieldError(field);
+          }
+        });
+        field.addEventListener('input', () => {
+          clearFieldError(field);
+        });
+      });
+    }
+
+    // Receptionist unlock with inactivity timeout
     const ACCESS_KEYWORD = 'zyara';
+    const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
     const overlay = document.getElementById('unlock-overlay');
+    let inactivityTimer = null;
+    let isLocked = false;
+
+    function checkPreviousUnlock() {
+      const unlocked = sessionStorage.getItem('systemUnlocked');
+      if (unlocked === 'true') {
+        overlay.style.display = 'none';
+        isLocked = false;
+        return true;
+      }
+      return false;
+    }
+
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      if (!isLocked) {
+        inactivityTimer = setTimeout(() => {
+          isLocked = true;
+          sessionStorage.setItem('systemUnlocked', 'false');
+          overlay.style.display = 'flex';
+          const input = document.querySelector('#unlock-form input[name="keyword"]');
+          setTimeout(() => input && input.focus(), 50);
+          showToast('System locked due to inactivity');
+        }, INACTIVITY_TIMEOUT);
+      }
+    }
+
+    function setupActivityListeners() {
+      ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(event => {
+        document.addEventListener(event, resetInactivityTimer, true);
+      });
+    }
+
     document.getElementById('unlock-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const { keyword } = formToJSON(e.target);
       if ((keyword || '').toLowerCase().trim() === ACCESS_KEYWORD) {
         overlay.style.display = 'none';
+        isLocked = false;
+        e.target.reset();
+        sessionStorage.setItem('systemUnlocked', 'true');
         showToast('Unlocked');
+        resetInactivityTimer();
       } else {
         showToast('Invalid keyword');
       }
     });
+    
     window.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z') {
         overlay.style.display = 'flex';
+        isLocked = true;
         const input = document.querySelector('#unlock-form input[name="keyword"]');
         setTimeout(() => input && input.focus(), 50);
       }
     });
+
+    // ==================== ROOM STATUS MANAGEMENT ====================
+    const maintenanceTimers = {};
+
+    async function setRoomStatus(roomId, status) {
+      return api(`/api/rooms/${roomId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+    }
+
+    function scheduleMaintenanceAfterCheckout(roomId, checkoutTime) {
+      const checkoutDate = new Date(checkoutTime);
+      const now = new Date();
+      const delayMs = checkoutDate.getTime() - now.getTime();
+      
+      if (delayMs > 0) {
+        if (maintenanceTimers[roomId]) clearTimeout(maintenanceTimers[roomId]);
+        maintenanceTimers[roomId] = setTimeout(async () => {
+          await setRoomStatus(roomId, 'maintenance');
+          showToast(`Room ${roomId} set to maintenance mode`);
+          loadRooms();
+          // Auto-reset to available after 30 minutes
+          setTimeout(async () => {
+            await setRoomStatus(roomId, 'available');
+            showToast(`Room ${roomId} back to available`);
+            loadRooms();
+          }, 30 * 60 * 1000);
+        }, delayMs);
+      }
+    }
+
+    // Initialize activity tracking
+    if (!checkPreviousUnlock()) {
+      setupActivityListeners();
+      resetInactivityTimer();
+    } else {
+      setupActivityListeners();
+      resetInactivityTimer();
+    }
 
     // Rooms
     const roomsState = { page: 1, limit: 10, q: '', status: '' };
@@ -310,9 +621,9 @@
           <td class="p-2">${r.number}</td>
           <td class="p-2">${r.type}</td>
           <td class="p-2">${r.capacity}</td>
-          <td class="p-2">$${r.price_per_night}</td>
+          <td class="p-2">₹${r.price_per_night}</td>
           <td class="p-2"><span class="px-2 py-1 rounded text-xs ${r.status==='available'?'chip-available':'chip-maint'}">${r.status}</span></td>
-          <td class="p-2"><button class="text-red-400" data-del-room="${r.id}">Delete</button></td>
+          <td class="p-2"><button type="button" class="text-red-400" data-del-room="${r.id}">Delete</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -334,16 +645,28 @@
     document.getElementById('rooms-next').addEventListener('click', () => { roomsState.page = roomsState.page + 1; loadRooms(); });
     document.getElementById('form-room').addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!validateForm(e.target)) {
+        showToast('Please fix validation errors');
+        return;
+      }
       const payload = formToJSON(e.target);
       payload.capacity = Number(payload.capacity);
       payload.price_per_night = Number(payload.price_per_night);
-      await api('/api/rooms', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-      e.target.reset();
-      loadRooms();
+      try {
+        await api('/api/rooms', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+        e.target.reset();
+        loadRooms();
+        showToast('Room added successfully');
+      } catch (err) {
+        showToast(err.error || 'Failed to add room');
+      }
     });
+    setupFormValidation('form-room');
 
     // Available
+    let lastSearchParams = {};
     async function searchAvailable(params) {
+      lastSearchParams = params || {};
       const q = new URLSearchParams(params).toString();
       const data = await api('/api/rooms/available?' + q);
       const container = document.getElementById('available-results');
@@ -353,7 +676,7 @@
         card.className = 'p-4 rounded-xl border';
         card.innerHTML = `<div class="font-semibold">Room ${r.number}</div>
           <div class="text-sm text-gray-400">Type: ${r.type} · Capacity: ${r.capacity}</div>
-          <div class="text-sm text-gray-400">$${r.price_per_night} / night</div>
+          <div class="text-sm text-gray-400">₹${r.price_per_night} / night</div>
           <div class="mt-3"><button class="btn" data-book-room="${r.id}">Book this room</button></div>`;
         container.appendChild(card);
       });
@@ -361,32 +684,113 @@
         const form = document.getElementById('form-booking');
         const searchForm = document.getElementById('form-available');
         form.room_id.value = btn.dataset.bookRoom;
-        form.check_in.value = searchForm.check_in.value;
-        form.check_out.value = searchForm.check_out.value;
+        // If user used Search Now (no dates in form), prefill booking with lastSearchParams.at or today's date/time
+        if (!searchForm.check_in.value && lastSearchParams && lastSearchParams.at) {
+          const at = new Date(lastSearchParams.at.replace(' ', 'T'));
+          form.check_in.value = at.toISOString().split('T')[0];
+          form.check_in_time.value = at.toTimeString().split(' ')[0].slice(0,5);
+          form.check_out.value = at.toISOString().split('T')[0];
+          form.check_out_time.value = at.toTimeString().split(' ')[0].slice(0,5);
+        } else {
+          form.check_in.value = searchForm.check_in.value;
+          form.check_out.value = searchForm.check_out.value;
+        }
         activate('bookings');
       }));
     }
     document.getElementById('form-available').addEventListener('submit', (e) => {
       e.preventDefault();
-      searchAvailable(formToJSON(e.target));
+      // allow empty dates (user can use Search Now)
+      const data = formToJSON(e.target);
+      const checkIn = e.target.check_in.value;
+      const checkOut = e.target.check_out.value;
+      if (checkIn || checkOut) {
+        if (!validateForm(e.target)) {
+          showToast('Please fix validation errors');
+          return;
+        }
+        if (!isValidDateRange(checkIn, checkOut)) {
+          showToast('Check-out date must be after check-in date');
+          return;
+        }
+      }
+      searchAvailable(data);
     });
+    // validation still useful for individual fields
+    setupFormValidation('form-available');
+
+    (function setupAvailableDateLimits(){
+      const inEl = document.getElementById('avail-check-in');
+      const outEl = document.getElementById('avail-check-out');
+      if (!inEl || !outEl) return;
+      function toLocalDateString(d){ const t = new Date(d.getTime() - d.getTimezoneOffset()*60000); return t.toISOString().split('T')[0]; }
+      const today = toLocalDateString(new Date());
+      inEl.min = today;
+      outEl.min = today;
+      inEl.addEventListener('change', () => {
+        if (inEl.value) {
+          outEl.min = inEl.value;
+          if (outEl.value && outEl.value < inEl.value) outEl.value = inEl.value;
+        } else {
+          outEl.min = today;
+        }
+      });
+    })();
+
+    document.getElementById('search-now').addEventListener('click', (e) => {
+      // compute local datetime (no timezone) in format YYYY-MM-DDTHH:MM:SS
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('.')[0];
+      const type = document.querySelector('#form-available [name="type"]').value;
+      const checkIn = document.getElementById('avail-check-in').value;
+      const checkOut = document.getElementById('avail-check-out').value;
+      const params = {};
+      if (type) params.type = type;
+      if (checkIn) params.check_in = checkIn;
+      if (checkOut) params.check_out = checkOut;
+      if (!checkIn && !checkOut) params.at = local;
+      searchAvailable(params);
+    });
+
+    (function setupBookingDateLimits(){
+      const inEl = document.querySelector('#form-booking [name="check_in"]');
+      const outEl = document.querySelector('#form-booking [name="check_out"]');
+      if (!inEl || !outEl) return;
+      function toLocalDateString(d){ const t = new Date(d.getTime() - d.getTimezoneOffset()*60000); return t.toISOString().split('T')[0]; }
+      const today = toLocalDateString(new Date());
+      inEl.min = today;
+      outEl.min = today;
+      inEl.addEventListener('change', () => {
+        if (inEl.value) {
+          outEl.min = inEl.value;
+          if (outEl.value && outEl.value < inEl.value) outEl.value = inEl.value;
+        } else {
+          outEl.min = today;
+        }
+      });
+    })();
 
     // Bookings
     const bookingsState = { page: 1, limit: 10, q: '' };
     async function loadBookings() {
       const qs = new URLSearchParams({ page: bookingsState.page, limit: bookingsState.limit, q: bookingsState.q }).toString();
-      const { total, rows } = await api('/api/bookings?' + qs);
-      const tbody = document.querySelector('#table-bookings tbody');
-      tbody.innerHTML = '';
-      rows.forEach(b => {
+      try {
+        const { total, rows } = await api('/api/bookings?' + qs);
+        const tbody = document.querySelector('#table-bookings tbody');
+        tbody.innerHTML = '';
+        rows.forEach(b => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="p-2">${b.id}</td>
           <td class="p-2">${b.guest_name}</td>
+          <td class="p-2">${b.room_id || '-'}</td>
           <td class="p-2">${b.room_number} (${b.room_type})</td>
-          <td class="p-2">${b.check_in}</td>
-          <td class="p-2">${b.check_out}</td>
-          <td class="p-2"><button class="text-red-600" data-del-booking="${b.id}">Delete</button></td>
+          <td class="p-2">${b.staff_id || '-'}</td>
+          <td class="p-2">${b.staff_name ? b.staff_name : '-'}</td>
+          <td class="p-2">${b.check_in} ${b.check_in_time || ''}</td>
+          <td class="p-2">${b.check_out} ${b.check_out_time || ''}</td>
+          <td class="p-2"><span class="px-2 py-1 rounded text-xs ${b.status==='active'?'chip-available':'chip-maint'}">${b.status || 'active'}</span></td>
+          <td class="p-2"><button type="button" class="text-red-600" data-del-booking="${b.id}">Delete</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -395,11 +799,15 @@
         loadBookings();
         showToast('Booking deleted');
       }));
-      const pageText = document.getElementById('bookings-page');
-      const totalPages = Math.max(1, Math.ceil(total / bookingsState.limit));
-      pageText.textContent = `Page ${bookingsState.page} of ${totalPages}`;
-      document.getElementById('bookings-prev').disabled = bookingsState.page <= 1;
-      document.getElementById('bookings-next').disabled = bookingsState.page >= totalPages;
+        const pageText = document.getElementById('bookings-page');
+        const totalPages = Math.max(1, Math.ceil(total / bookingsState.limit));
+        pageText.textContent = `Page ${bookingsState.page} of ${totalPages}`;
+        document.getElementById('bookings-prev').disabled = bookingsState.page <= 1;
+        document.getElementById('bookings-next').disabled = bookingsState.page >= totalPages;
+      } catch (err) {
+        console.error('Failed to load bookings:', err);
+        showToast(err.error || err.message || 'Failed to load bookings');
+      }
     }
     document.getElementById('refresh-bookings').addEventListener('click', loadBookings);
     document.getElementById('bookings-q').addEventListener('input', (e) => { bookingsState.q = e.target.value; bookingsState.page = 1; loadBookings(); });
@@ -407,15 +815,60 @@
     document.getElementById('bookings-next').addEventListener('click', () => { bookingsState.page = bookingsState.page + 1; loadBookings(); });
     document.getElementById('form-booking').addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!validateForm(e.target)) {
+        showToast('Please fix validation errors');
+        return;
+      }
+      const payload = formToJSON(e.target);
+      const checkIn = e.target.check_in.value;
+      const checkOut = e.target.check_out.value;
+      const checkInTime = e.target.check_in_time.value;
+      const checkOutTime = e.target.check_out_time.value;
+      // Date validations: check-in not in past, check-out after check-in
+      const today = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().split('T')[0];
+      if (!checkIn || !checkOut) { showToast('Select check-in and check-out dates'); return; }
+      if (checkIn < today) { showToast('Check-in cannot be in the past'); return; }
+      if (!isValidDateRange(checkIn, checkOut)) {
+        showToast('Check-out date must be after check-in date');
+        return;
+      }
+      // If same-day booking, ensure times are ordered
+      if (checkIn === checkOut) {
+        if (!checkInTime || !checkOutTime) { showToast('Select check-in and check-out times'); return; }
+        const inTs = checkIn + 'T' + checkInTime;
+        const outTs = checkOut + 'T' + checkOutTime;
+        if (new Date(outTs) <= new Date(inTs)) { showToast('Check-out time must be after check-in time'); return; }
+      }
+
+      // Enforce minimum duration of 24 hours for any booking
+      const startDt = new Date(checkIn + 'T' + (checkInTime || '00:00'));
+      const endDt = new Date(checkOut + 'T' + (checkOutTime || '00:00'));
+      const diffMs = endDt.getTime() - startDt.getTime();
+      if (diffMs < 24 * 60 * 60 * 1000) {
+        showToast('Booking must be at least 24 hours');
+        return;
+      }
       try {
-        await api('/api/bookings', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(formToJSON(e.target)) });
+        const result = await api('/api/bookings', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+        
+        // Mark room as booked
+        const roomId = payload.room_id;
+        await setRoomStatus(roomId, 'booked');
+        
+        // Schedule maintenance after checkout (at checkout time + maintenance duration)
+        const checkoutDateTime = new Date(`${checkOut}T${checkOutTime}`);
+        scheduleMaintenanceAfterCheckout(roomId, checkoutDateTime);
+        
         e.target.reset();
+        loadRooms();
         loadBookings();
-        showToast('Booking created');
+        loadStaff();
+        showToast('Booking created successfully - room marked as booked');
       } catch (err) {
         showToast(err.error || 'Booking failed');
       }
     });
+    setupFormValidation('form-booking');
 
     // Assign feature is disabled for now (UI removed)
 
@@ -434,7 +887,8 @@
           <td class="p-2">${s.role}</td>
           <td class="p-2">${s.phone || ''}</td>
           <td class="p-2">${s.email || ''}</td>
-          <td class="p-2"><button class="text-red-400" data-del-staff="${s.id}">Delete</button></td>
+          <td class="p-2">${s.status || 'available'}</td>
+          <td class="p-2"><button type="button" class="text-red-400" data-del-staff="${s.id}">Delete</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -455,11 +909,48 @@
     document.getElementById('staff-next').addEventListener('click', () => { staffState.page = staffState.page + 1; loadStaff(); });
     document.getElementById('form-staff').addEventListener('submit', async (e) => {
       e.preventDefault();
-      await api('/api/staff', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(formToJSON(e.target)) });
-      e.target.reset();
-      loadStaff();
-      showToast('Staff added');
+      if (!validateForm(e.target)) {
+        showToast('Please fix validation errors');
+        return;
+      }
+      
+      const payload = formToJSON(e.target);
+      
+      // Check for duplicate phone and email
+      if (payload.phone || payload.email) {
+        try {
+          const { total, rows } = await api('/api/staff?limit=1000&q=');
+          for (const staff of rows) {
+            if (payload.phone && staff.phone === payload.phone) {
+              showToast('Phone number already exists');
+              document.querySelector('#form-staff input[name="phone"]').focus();
+              return;
+            }
+            if (payload.email && staff.email === payload.email) {
+              showToast('Email already exists');
+              document.querySelector('#form-staff input[name="email"]').focus();
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('Error checking duplicates:', err);
+        }
+      }
+      
+      try {
+        await api('/api/staff', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+        e.target.reset();
+        loadStaff();
+        showToast('Staff added successfully');
+      } catch (err) {
+        if (err.error && (err.error.includes('UNIQUE') || err.error.includes('Duplicate'))) {
+          showToast('Phone or email already exists - please use unique values');
+        } else {
+          showToast(err.error || 'Failed to add staff');
+        }
+      }
     });
+    setupFormValidation('form-staff');
 
     // Initial loads
     loadRooms();
